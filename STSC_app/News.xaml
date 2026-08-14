@@ -1,0 +1,199 @@
+﻿<Page x:Class="STSC_app.News"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:STSC_app"
+      Title="News">
+
+    <Page.Resources>
+        <local:KindsToColorConverter x:Key="KindsToColorConverter"/>
+    </Page.Resources>
+
+    <Grid Margin="10" Background="Transparent">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" BorderBrush="#DDD" BorderThickness="0,0,1,0" Margin="0,0,10,0">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                    <Button Content="ニュース更新" Height="30" Margin="0,0,0,8" Click="LoadButton_Click"/>
+
+                    <Expander Header="🔍 検索・フィルター条件" 
+          IsExpanded="False" 
+          Background="#F5F5F5" 
+          Padding="6" 
+          Margin="0,0,0,5">
+                        <StackPanel Margin="0,5,0,0">
+                            <TextBlock Text="タイトル / タグ検索" FontSize="11" Foreground="#666" Margin="0,0,0,2"/>
+                            <TextBox x:Name="SearchKeywordTextBox" Height="24" Margin="0,0,0,6" TextChanged="Filter_Changed"/>
+
+                            <TextBlock Text="種類" FontSize="11" Foreground="#666" Margin="0,0,0,2"/>
+                            <ComboBox x:Name="KindsFilterComboBox" Height="24" Margin="0,0,0,6" SelectionChanged="Filter_Changed">
+                                <ComboBoxItem Content="すべて" IsSelected="True"/>
+                                <ComboBoxItem Content="normal (通常)"/>
+                                <ComboBoxItem Content="warning (警告)"/>
+                                <ComboBoxItem Content="important (重要)"/>
+                            </ComboBox>
+
+                            <TextBlock Text="タグ（複数選択可）" FontSize="11" Foreground="#666" Margin="0,0,0,2"/>
+                            <Border BorderBrush="#CCC" BorderThickness="1" CornerRadius="3" Background="White" Margin="0,0,0,6">
+                                <ListBox x:Name="TagFilterListBox" 
+                                         MaxHeight="100" 
+                                         BorderThickness="0" 
+                                         Background="Transparent"
+                                         SelectionMode="Multiple"
+                                         SelectionChanged="Filter_Changed">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" Padding="2,1"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+
+                            <TextBlock Text="投稿期間" FontSize="11" Foreground="#666" Margin="0,0,0,2"/>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <DatePicker x:Name="StartDatePicker" Grid.Column="0" Height="24" SelectedDateChanged="Filter_Changed"/>
+                                <TextBlock Grid.Column="1" Text="〜" VerticalAlignment="Center" Margin="3,0"/>
+                                <DatePicker x:Name="EndDatePicker" Grid.Column="2" Height="24" SelectedDateChanged="Filter_Changed"/>
+                            </Grid>
+
+                            <Button Content="検索条件をクリア" Height="22" FontSize="10" Click="ClearFilterButton_Click"/>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ListBox x:Name="NewsSidebarListBox" 
+                             BorderThickness="0" 
+                             Background="Transparent"
+                             HorizontalContentAlignment="Stretch"
+                             SelectionChanged="NewsSidebarListBox_SelectionChanged">
+
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter/>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border x:Name="CardBorder" 
+                                        CornerRadius="6" 
+                                        Padding="10" 
+                                        Margin="0,0,5,8"
+                                        BorderThickness="2"
+                                        BorderBrush="Transparent"
+                                        Background="{Binding content.kinds, Converter={StaticResource KindsToColorConverter}}">
+
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="ニュースIDをコピー" Click="CopyNewsId_Click"/>
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
+
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding content.title}" 
+                                                   FontWeight="Bold" 
+                                                   FontSize="14" 
+                                                   TextWrapping="Wrap" 
+                                                   Margin="0,0,0,6"/>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <ItemsControl Grid.Column="0" ItemsSource="{Binding content.tag}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border x:Name="ListTagBorder" Background="#DDD" CornerRadius="3" Padding="4,1" Margin="0,0,4,0" Loaded="ListTagBorder_Loaded">
+                                                            <TextBlock Text="{Binding}" FontSize="9" Foreground="#333"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding date, StringFormat='公開日: {0}'}" 
+                                                       FontSize="10" 
+                                                       Foreground="#666" 
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter TargetName="CardBorder" Property="Opacity" Value="0.85"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter TargetName="CardBorder" Property="BorderBrush" Value="#007ACC"/>
+                                        <Setter TargetName="CardBorder" Property="Opacity" Value="1.0"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="10,0,0,0">
+            <Grid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="全文をコピー" Click="CopyFullText_Click"/>
+                </ContextMenu>
+            </Grid.ContextMenu>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="10">
+                    <Border x:Name="DetailHeaderBorder" CornerRadius="8" Padding="12" Margin="0,0,0,15">
+                        <StackPanel>
+                            <TextBlock x:Name="DetailDateTextBlock" Foreground="#666666" FontSize="12" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="DetailTitleTextBlock" Text="左の一覧からニュースを選択してください" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            <ItemsControl x:Name="DetailTagItemsControl">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#DDD" CornerRadius="3" Padding="6,2" Margin="0,0,6,0" Loaded="DetailTagBorder_Loaded">
+                                            <TextBlock Text="{Binding}" FontSize="11" Foreground="#333"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel x:Name="DetailContentPanel"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border x:Name="UrlStatusBar" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="#E1E1E1" BorderBrush="#CCCCCC" BorderThickness="1" CornerRadius="3" Padding="6,2" Margin="0,0,10,10" Visibility="Collapsed">
+                <TextBlock x:Name="UrlStatusBarText" FontSize="11" Foreground="#333333"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

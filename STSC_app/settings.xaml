@@ -1,0 +1,106 @@
+﻿<Page x:Class="STSC_app.Settings"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Settings">
+
+    <Grid Margin="20" Background="Transparent">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+
+                <TextBlock Text="設定" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                <Border Background="#F9F9F9" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#EEE" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="🎨 表示・テーマ" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Grid Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="ダークモード (準備中)" VerticalAlignment="Center" FontSize="13"/>
+                            <ToggleButton Grid.Column="1" x:Name="DarkModeToggle" Width="45" Height="22" IsEnabled="False"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#F9F9F9" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#EEE" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="💾 データ管理" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <StackPanel Margin="0,5">
+                            <TextBlock Text="ニュースのキャッシュクリア" FontSize="13" Margin="0,0,0,5"/>
+                            <TextBlock Text="オフラインデータや読み込みキャッシュを削除します。" FontSize="11" Foreground="#666" Margin="0,0,0,8"/>
+                            <Button Content="キャッシュを削除する" Width="140" Height="28" HorizontalAlignment="Left" Click="ClearCacheButton_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="#F9F9F9" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#EEE" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="📄 リンク" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock FontSize="13" Margin="0,3">
+                                <Hyperlink NavigateUri="https://sites.google.com/view/shinkai-traffic-signal/home" RequestNavigate="Hyperlink_RequestNavigate">
+                                    公式ホームページ
+                                </Hyperlink>
+                            </TextBlock>
+                            <TextBlock FontSize="13" Margin="0,3">
+                                <Hyperlink NavigateUri="https://sites.google.com/view/shinkai-traffic-signal/Announcements_News" RequestNavigate="Hyperlink_RequestNavigate">
+                                    公式ニュースページ
+                                </Hyperlink>
+                            </TextBlock>
+                            <TextBlock FontSize="13" Margin="0,3">
+                                <Hyperlink NavigateUri="https://sites.google.com/view/shinkai-traffic-signal/termsofservice" RequestNavigate="Hyperlink_RequestNavigate">
+                                    利用規約
+                                </Hyperlink>
+                            </TextBlock>
+                            <TextBlock FontSize="13" Margin="0,3">
+                                <Hyperlink NavigateUri="https://sites.google.com/view/shinkai-traffic-signal/privacypolicy" RequestNavigate="Hyperlink_RequestNavigate">
+                                    プライバシーポリシー
+                                </Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#F9F9F9" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#EEE" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="ℹ️ アプリケーション情報" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Grid Margin="0,3">
+                            <TextBlock Text="制作" FontSize="12" Foreground="#666"/>
+                            <TextBlock Text="しんかい｜Gemini" FontSize="12" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        </Grid>
+                        <Grid Margin="0,3">
+                            <TextBlock Text="アプリ名" FontSize="12" Foreground="#666"/>
+                            <TextBlock Text="STSC アプリ" FontSize="12" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        </Grid>
+                        <Separator Margin="0,5"/>
+                        <Grid Margin="0,3">
+                            <TextBlock Text="バージョン" FontSize="12" Foreground="#666"/>
+                            <TextBlock Text="v1.0.0" FontSize="12" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        </Grid>
+
+                        <Button Content="アップデートを確認" Height="26" Margin="0,10,0,0" Click="CheckUpdateButton_Click"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid x:Name="ConfirmDialogOverlay" Background="#80000000" Visibility="Collapsed" Margin="-20">
+            <Border Background="White" CornerRadius="10" Width="360" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" Color="Black" Opacity="0.2" Direction="270"/>
+                </Border.Effect>
+
+                <StackPanel x:Name="DialogConfirmState">
+                    <TextBlock Text="確認" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
+                    <TextBlock Text="一時キャッシュを削除しますか？" FontSize="13" Foreground="#333" Margin="0,0,0,20"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="はい" Width="80" Height="30" Margin="0,0,10,0" Background="#007ACC" Foreground="White" BorderThickness="0" Click="DialogYes_Click"/>
+                        <Button Content="いいえ" Width="80" Height="30" Background="#E2E2E2" Foreground="#333" BorderThickness="0" Click="DialogNo_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>
