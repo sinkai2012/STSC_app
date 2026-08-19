@@ -4,6 +4,11 @@
              xmlns:local="clr-namespace:STSC_app"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 初期表示用のテーマリソース -->
+                <ResourceDictionary Source="pack://application:,,,/STSC_app;component/Themes/LightTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

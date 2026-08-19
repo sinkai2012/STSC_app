@@ -1,0 +1,143 @@
+﻿<UserControl x:Class="STSC_app.TermsDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#80000000">
+
+    <Border Background="{DynamicResource CardBackgroundBrush}" 
+            BorderBrush="{DynamicResource CardBorderBrush}" 
+            BorderThickness="1" 
+            CornerRadius="10" 
+            Width="650" 
+            MaxHeight="500" 
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Center" 
+            Padding="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" Color="Black" Opacity="0.3" Direction="270"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- タイトル -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="利用規約への同意" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- 利用規約の文章エリア（見出しや段落対応） -->
+            <Border Grid.Row="1" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,15">
+                <FlowDocumentScrollViewer VerticalScrollBarVisibility="Auto">
+                    <FlowDocument Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" PagePadding="0">
+
+                        <!-- ★ ここに用意した規約文章を入れます -->
+                        <Paragraph FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                            アプリケーション利用規約
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            本規約は、しんかい信号制作株式会社（以下「STSC」または「当社」）が制作・配布するアプリケーションソフトウェア（以下「本アプリ」）の利用条件を定めるものです。ユーザーは、本アプリを利用した時点で、本規約に同意したものとみなされます。
+                        </Paragraph>
+
+                        <Paragraph FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                            第1条（適用および権利帰属）
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            1. 本規約は、本アプリの利用に関する当社とユーザーとの間の権利義務関係を定めることを目的とします。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            2. 本アプリに関する一切の知的財産権は当社に帰属します。当社はユーザーに対し、本規約に従って本アプリを利用する非独占的な権利を許諾します。
+                        </Paragraph>
+
+                        <Paragraph FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                            第2条（アプリの機能・外部通信）
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            1. 本アプリは、最新ニュース等の情報取得のために外部サービス（GitHub Gist等）と通信を行います。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            2. 本アプリは、アプリ内でコンテンツやお問い合わせを表示するため、WebView2機能を利用しています。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            3. お問い合わせフォーム（Googleフォーム）にて取得した個人情報（メールアドレス等）は、当社のお問い合わせ対応および必要な連絡の目的でのみ使用いたします。
+                        </Paragraph>
+
+                        <Paragraph FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                            第3条（ベータ版についての特記事項）
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            1. 本アプリはベータ版（試用版）として提供される場合があり、予期せぬ不具合や動作不良が含まれている可能性があります。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            2. 当社は、ベータ版に対する個別のサポート、不具合の修正、および継続的な提供を保証しません。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            3. 当社は、事前の通知なく本アプリの機能変更、提供の中断、または終了を行うことができるものとします。
+                        </Paragraph>
+
+                        <Paragraph FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                            第4条（禁止事項）
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            ユーザーは、本アプリの利用にあたり、以下の行為を行ってはなりません。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            1. 本アプリの逆アセンブル、逆コンパイル、リバースエンジニアリング、その他解析行為。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            2. 本アプリの運営を妨害する行為、または当社のネットワーク・システムに過度な負荷をかける行為。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            3. 当社または第三者の権利を侵害する行為。
+                        </Paragraph>
+
+                        <Paragraph FontSize="16" FontWeight="Bold" Margin="0,0,0,10">
+                            第5条（免責および規約の改定）
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            1. 本アプリの使用または使用不能により発生した損害や不具合について、当社は一切の責任を負いません。
+                        </Paragraph>
+
+                        <Paragraph Margin="0,0,0,10">
+                            2. 当社は、事前の通知なく本規約を変更することがあります。変更後に本アプリを利用した場合、変更後の規約に同意したものとみなします。
+                        </Paragraph>
+
+
+                    </FlowDocument>
+                </FlowDocumentScrollViewer>
+            </Border>
+
+            <!-- 下部ボタン・チェックボックスエリア -->
+            <StackPanel Grid.Row="2">
+                <CheckBox x:Name="AgreeCheckBox" 
+                          Content="利用規約に同意します" 
+                          Foreground="{DynamicResource PrimaryTextBrush}" 
+                          Margin="0,0,0,12" 
+                          Checked="AgreeCheckBox_Changed" 
+                          Unchecked="AgreeCheckBox_Changed"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="ExitButton" Content="同意しない（終了）" Width="140" Height="32" Margin="0,0,10,0" Click="ExitButton_Click"/>
+                    <Button x:Name="AgreeButton" Content="アプリを開始する" Width="130" Height="32" IsEnabled="False" Click="AgreeButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

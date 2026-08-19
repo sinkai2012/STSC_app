@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="STSC_app/STSC_app.csproj" />
+  <Project Path="STSC_Setup/STSC_Setup.vdproj" Type="Installer">
+    <Build />
+  </Project>
 </Solution>

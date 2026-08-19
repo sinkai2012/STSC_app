@@ -1,15 +1,29 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
+
+using Panel = System.Windows.Controls.Panel;
+using ContextMenu = System.Windows.Controls.ContextMenu;
+using MenuItem = System.Windows.Controls.MenuItem;
+
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using FontFamily = System.Windows.Media.FontFamily;
+using Application = System.Windows.Application;
+using Clipboard = System.Windows.Clipboard;
 
 namespace STSC_app
 {
     public static class CustomTextParser
     {
-        public static void ParseAndRender(System.Windows.Controls.Panel container, string rawText, News? page = null)
+        public static void ParseAndRender(Panel container, string rawText, News? page = null)
         {
             container.Children.Clear();
             if (string.IsNullOrEmpty(rawText)) return;
@@ -32,36 +46,32 @@ namespace STSC_app
                     continue;
                 }
 
-                // 2. 複数行コードブロック処理中（閉じタグ ``` の検出）
+                // 2. 複数行コードブロック処理中
                 if (inCodeBlock && currentCodeBlockPanel != null)
                 {
                     int backtickIndex = line.IndexOf("```");
                     if (backtickIndex != -1)
                     {
-                        // ``` の前にある文字（"囲い２" など）があればそれも枠内に追加
                         string contentBefore = line.Substring(0, backtickIndex);
                         if (!string.IsNullOrEmpty(contentBefore))
                         {
                             AddCodeBlockLine(currentCodeBlockPanel, contentBefore);
                         }
 
-                        // コードブロック終了
                         inCodeBlock = false;
                         currentCodeBlockPanel = null;
                         continue;
                     }
 
-                    // 通常のコードブロック内の行
                     AddCodeBlockLine(currentCodeBlockPanel, line);
                     continue;
                 }
 
-                // 3. 複数行コードブロックの開始（```）
+                // 3. 複数行コードブロックの開始
                 if (!inCodeBlock && trimmedLine.StartsWith("```"))
                 {
                     inCodeBlock = true;
                     currentCodeBlockPanel = CreateCodeBlockPanel(container);
-                http://googleusercontent.com/immersive_entry_chip/0
                     string firstLineContent = trimmedLine.Substring(3).Trim();
                     if (!string.IsNullOrEmpty(firstLineContent))
                     {
@@ -75,7 +85,7 @@ namespace STSC_app
             }
         }
 
-        private static void AddCodeBlockFrame(System.Windows.Controls.Panel targetPanel, string content)
+        private static void AddCodeBlockFrame(Panel targetPanel, string content)
         {
             Border border = CreateCodeBlockBorder();
             StackPanel innerPanel = new StackPanel();
@@ -84,7 +94,7 @@ namespace STSC_app
             targetPanel.Children.Add(border);
         }
 
-        private static StackPanel CreateCodeBlockPanel(System.Windows.Controls.Panel targetPanel)
+        private static StackPanel CreateCodeBlockPanel(Panel targetPanel)
         {
             Border border = CreateCodeBlockBorder();
             StackPanel innerPanel = new StackPanel();
@@ -97,8 +107,8 @@ namespace STSC_app
         {
             return new Border
             {
-                Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2F3136")),
-                BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#202225")),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2D2D2D")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3E3E3E")),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(5),
                 Padding = new Thickness(10, 8, 10, 8),
@@ -111,22 +121,24 @@ namespace STSC_app
             TextBlock tb = new TextBlock
             {
                 Text = text,
-                FontFamily = new System.Windows.Media.FontFamily("Consolas, Courier New"),
+                FontFamily = new FontFamily("Consolas, Courier New"),
                 FontSize = 12.5,
-                Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#DCDDDE")),
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DCDDDE")),
                 TextWrapping = TextWrapping.Wrap
             };
             panel.Children.Add(tb);
         }
 
-        private static void AddLineToPanel(System.Windows.Controls.Panel targetPanel, string line, News? page)
+        private static void AddLineToPanel(Panel targetPanel, string line, News? page)
         {
+            Brush textBrush = Application.Current.TryFindResource("PrimaryTextBrush") as Brush ?? Brushes.Black;
+
             TextBlock textBlock = new TextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 2, 0, 2),
                 FontSize = 13,
-                Foreground = System.Windows.Media.Brushes.Black
+                Foreground = textBrush
             };
 
             string trimmedLine = line.Trim();
@@ -210,7 +222,7 @@ namespace STSC_app
             Hyperlink link = new Hyperlink(new Run(displayText))
             {
                 NavigateUri = new Uri(url, UriKind.RelativeOrAbsolute),
-                Foreground = System.Windows.Media.Brushes.DeepSkyBlue
+                Foreground = Brushes.DeepSkyBlue
             };
 
             link.RequestNavigate += (sender, e) =>
@@ -230,8 +242,8 @@ namespace STSC_app
             link.MouseEnter += (sender, e) =>
             {
                 if (parentPage != null &&
-                    parentPage.FindName("UrlStatusBar") is System.Windows.Controls.Border statusBar &&
-                    parentPage.FindName("UrlStatusBarText") is System.Windows.Controls.TextBlock statusText)
+                    parentPage.FindName("UrlStatusBar") is Border statusBar &&
+                    parentPage.FindName("UrlStatusBarText") is TextBlock statusText)
                 {
                     statusText.Text = url;
                     statusBar.Visibility = Visibility.Visible;
@@ -241,21 +253,21 @@ namespace STSC_app
             link.MouseLeave += (sender, e) =>
             {
                 if (parentPage != null &&
-                    parentPage.FindName("UrlStatusBar") is System.Windows.Controls.Border statusBar)
+                    parentPage.FindName("UrlStatusBar") is Border statusBar)
                 {
                     statusBar.Visibility = Visibility.Collapsed;
                 }
             };
 
-            System.Windows.Controls.ContextMenu contextMenu = new System.Windows.Controls.ContextMenu();
+            ContextMenu contextMenu = new ContextMenu();
 
-            System.Windows.Controls.MenuItem copyUrlItem = new System.Windows.Controls.MenuItem { Header = "URLをコピー" };
+            MenuItem copyUrlItem = new MenuItem { Header = "URLをコピー" };
             copyUrlItem.Click += (sender, e) =>
             {
-                System.Windows.Clipboard.SetText(url);
+                Clipboard.SetText(url);
             };
 
-            System.Windows.Controls.MenuItem copyFullTextItem = new System.Windows.Controls.MenuItem { Header = "全文をコピー" };
+            MenuItem copyFullTextItem = new MenuItem { Header = "全文をコピー" };
             copyFullTextItem.Click += (sender, e) =>
             {
                 parentPage?.CopyFullText_Click(sender, e);

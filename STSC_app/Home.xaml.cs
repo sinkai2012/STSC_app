@@ -21,6 +21,12 @@ namespace STSC_app
         public Home()
         {
             InitializeComponent();
+
+            VersionTextBlock.Text = $"v{App.AppVer}";
+
+            DateTextBlock.Text = $"{App.AppDate}";
+
+            ReleaseNotes.Content = $"v{App.AppVer} のリリースノート";
         }
     }
 }

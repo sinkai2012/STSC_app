@@ -6,26 +6,18 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace STSC_app
 {
-    // Gist JSON の受け取り用クラス
-    public class UpdateInfo
-    {
-        public string? ver { get; set; }
-        public string? date { get; set; }
-        public string? url { get; set; }
-    }
-
     public static class UpdateChecker
     {
-        // ★ 現在のアプリバージョン（更新時はここを書き換えます）
-        public const string CurrentVersion = "1.0.0";
+        public static readonly string CurrentVersion = $"v{App.AppVer}";
+        private const string RepoOwner = "sinkai2012";
+        private const string RepoName = "STSC_app";
 
-        // ★ あなたの Gist の Raw URL
-        private const string JsonUrl = "https://gist.githubusercontent.com/sinkai2012/dc49cbaf8eead285228ed389df4e5275/raw/information.json";
-
+        /// <summary>
+        /// ★ 1. 自動チェック：GitHubの最新リリースを優先して判定
+        /// </summary>
         public static async Task CheckUpdateAsync(bool isManualCheck = false)
         {
             try
@@ -34,104 +26,192 @@ namespace STSC_app
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "STSC_app");
 
-                    // キャッシュ防止のためにタイムスタンプを付与
-                    string requestUrl = $"{JsonUrl}?t={DateTime.Now.Ticks}";
-                    string jsonString = await client.GetStringAsync(requestUrl);
+                    string apiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases";
+                    string jsonString = await client.GetStringAsync(apiUrl);
 
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var updateList = JsonSerializer.Deserialize<List<UpdateInfo>>(jsonString, options);
-                    var latest = updateList?.FirstOrDefault();
-
-                    if (latest != null && !string.IsNullOrEmpty(latest.ver))
+                    using (JsonDocument doc = JsonDocument.Parse(jsonString))
                     {
-                        Version currentVer = new Version(CurrentVersion);
-                        Version latestVer = new Version(latest.ver);
+                        var releases = doc.RootElement.EnumerateArray().ToList();
+                        if (releases.Count == 0) return;
 
-                        // Gist 側のバージョンが新しい場合
-                        if (latestVer > currentVer)
+                        // 最新のリリース（配列の先頭）を取得
+                        var latestRelease = releases[0];
+                        string latestTag = latestRelease.GetProperty("tag_name").GetString() ?? "";
+
+                        // バージョン比較
+                        if (IsUpdateRequired(CurrentVersion, latestTag))
                         {
-                            string message = $"新しいバージョン ({latest.ver}) が利用可能です！\n" +
-                                             $"公開日: {latest.date}\n\n" +
-                                             $"今すぐアップデートして再起動しますか？";
-
-                            var result = System.Windows.MessageBox.Show(
-                                message,
-                                "アップデートのお知らせ",
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Information
-                            );
-
-                            if (result == MessageBoxResult.Yes && !string.IsNullOrWhiteSpace(latest.url))
+                            if (System.Windows.Application.Current.MainWindow is MainWindow mainWindow)
                             {
-                                // Zipをダウンロードして更新ソフトを起動
-                                await DownloadAndStartUpdaterAsync(latest.url);
+                                string message = $"新しいバージョン ({latestTag}) が利用可能です！\n\n今すぐアップデートして再起動しますか？";
+                                bool isYes = await mainWindow.ShowCustomDialogAsync("アップデートのお知らせ", message, "今すぐ更新", "あとで");
+
+                                if (isYes)
+                                {
+                                    string? downloadUrl = GetZipUrlFromRelease(latestRelease);
+                                    if (!string.IsNullOrEmpty(downloadUrl))
+                                    {
+                                        await DownloadAndStartUpdaterAsync(client, downloadUrl);
+                                    }
+                                }
                             }
                         }
                         else if (isManualCheck)
                         {
-                            System.Windows.MessageBox.Show(
-                                "お使いのアプリは最新バージョンです。",
-                                "バージョン確認",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information
-                            );
+                            if (System.Windows.Application.Current.MainWindow is MainWindow mainWindow)
+                            {
+                                await mainWindow.ShowCustomDialogAsync("バージョン確認", "お使いのアプリは最新バージョンです。", "OK", "");
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                if (isManualCheck)
+                if (isManualCheck && System.Windows.Application.Current.MainWindow is MainWindow mainWindow)
                 {
-                    System.Windows.MessageBox.Show($"アップデート情報の取得に失敗しました:\n{ex.Message}");
+                    await mainWindow.ShowCustomDialogAsync("エラー", $"アップデート確認に失敗しました:\n{ex.Message}", "OK", "");
                 }
             }
         }
 
-        // Zip ファイルをダウンロードして STSC_Update.exe に引き渡す処理
-        private static async Task DownloadAndStartUpdaterAsync(string downloadUrl)
+        /// <summary>
+        /// ★ 2. settings.xaml 用：GitHubから公開中の全バージョン一覧を取得
+        /// </summary>
+        public static async Task<List<string>> GetVersionListAsync()
         {
+            var versionList = new List<string>();
             try
             {
-                // Windows の一時フォルダに保存するファイルパスを設定
-                string tempZipPath = Path.Combine(Path.GetTempPath(), "STSC_app_update.zip");
-
                 using (HttpClient client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "STSC_app");
+                    string apiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases";
+                    string jsonString = await client.GetStringAsync(apiUrl);
 
-                    // Zip をダウンロード
-                    byte[] fileBytes = await client.GetByteArrayAsync(downloadUrl);
-                    await File.WriteAllBytesAsync(tempZipPath, fileBytes);
-                }
-
-                // アプリの実行場所を取得
-                string appDir = AppDomain.CurrentDomain.BaseDirectory;
-                string updaterPath = Path.Combine(appDir, "STSC_Update.exe");
-
-                if (File.Exists(updaterPath))
-                {
-                    // STSC_Update.exe に Zip のパスと解凍先のフォルダを渡して起動
-                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    using (JsonDocument doc = JsonDocument.Parse(jsonString))
                     {
-                        FileName = updaterPath,
-                        Arguments = $"\"{tempZipPath}\" \"{appDir}\"",
-                        UseShellExecute = true
-                    };
-
-                    Process.Start(startInfo);
-
-                    // ★ メインアプリを閉じてファイルを解放する
-                    System.Windows.Application.Current.Shutdown();
+                        foreach (var release in doc.RootElement.EnumerateArray())
+                        {
+                            string tagName = release.GetProperty("tag_name").GetString() ?? "";
+                            if (!string.IsNullOrEmpty(tagName))
+                            {
+                                versionList.Add(tagName);
+                            }
+                        }
+                    }
                 }
-                else
+            }
+            catch { }
+            return versionList;
+        }
+
+        /// <summary>
+        /// ★ 3. settings.xaml 用：選択した特定のバージョンをダウンロードしてインストール
+        /// </summary>
+        public static async Task InstallSpecificVersionAsync(string targetVersion)
+        {
+            try
+            {
+                using (HttpClient client = new HttpClient())
                 {
-                    System.Windows.MessageBox.Show($"更新用プログラム (STSC_Update.exe) が見つかりませんでした。\n配置場所: {updaterPath}");
+                    client.DefaultRequestHeaders.Add("User-Agent", "STSC_app");
+                    string apiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/tags/{targetVersion}";
+                    string jsonString = await client.GetStringAsync(apiUrl);
+
+                    using (JsonDocument doc = JsonDocument.Parse(jsonString))
+                    {
+                        string? downloadUrl = GetZipUrlFromRelease(doc.RootElement);
+
+                        if (string.IsNullOrEmpty(downloadUrl))
+                        {
+                            if (System.Windows.Application.Current.MainWindow is MainWindow mainWindow)
+                            {
+                                await mainWindow.ShowCustomDialogAsync("エラー", $"バージョン '{targetVersion}' 内にダウンロード用 ZIP が見つかりませんでした。", "OK", "");
+                            }
+                            return;
+                        }
+
+                        await DownloadAndStartUpdaterAsync(client, downloadUrl);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"更新データのダウンロードに失敗しました:\n{ex.Message}");
+                if (System.Windows.Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    await mainWindow.ShowCustomDialogAsync("エラー", $"インストールの実行に失敗しました:\n{ex.Message}", "OK", "");
+                }
+            }
+        }
+
+        // リリース内の ZIP ファイル URL を取得するヘルパー
+        private static string? GetZipUrlFromRelease(JsonElement releaseElement)
+        {
+            if (releaseElement.TryGetProperty("assets", out var assets))
+            {
+                foreach (var asset in assets.EnumerateArray())
+                {
+                    string name = asset.GetProperty("name").GetString() ?? "";
+                    if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return asset.GetProperty("browser_download_url").GetString();
+                    }
+                }
+            }
+            return null;
+        }
+
+        // バージョン判定
+        private static bool IsUpdateRequired(string currentVerStr, string latestVerStr)
+        {
+            Version currentVer = ParseVersionNumber(currentVerStr);
+            Version latestVer = ParseVersionNumber(latestVerStr);
+            return latestVer > currentVer;
+        }
+
+        private static Version ParseVersionNumber(string ver)
+        {
+            if (string.IsNullOrEmpty(ver)) return new Version(0, 0, 0);
+            string clean = ver.TrimStart('v', 'V').Split('-')[0];
+            return Version.TryParse(clean, out Version? parsed) ? parsed : new Version(0, 0, 0);
+        }
+
+        // ダウンロード & アップデータ起動
+        private static async Task DownloadAndStartUpdaterAsync(HttpClient client, string downloadUrl)
+        {
+            string tempZipPath = Path.Combine(Path.GetTempPath(), "STSC_app_update.zip");
+
+            using (HttpResponseMessage response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
+            {
+                response.EnsureSuccessStatusCode();
+                using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
+                using (Stream streamToWriteTo = File.Open(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    await streamToReadFrom.CopyToAsync(streamToWriteTo);
+                }
+            }
+
+            string appDir = AppDomain.CurrentDomain.BaseDirectory;
+            string updaterPath = Path.Combine(appDir, "STSC_Update.exe");
+
+            if (File.Exists(updaterPath))
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = updaterPath,
+                    Arguments = $"\"{tempZipPath}\"",
+                    UseShellExecute = true
+                };
+                Process.Start(startInfo);
+                System.Windows.Application.Current.Shutdown();
+            }
+            else
+            {
+                if (System.Windows.Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    await mainWindow.ShowCustomDialogAsync("エラー", $"更新用プログラム (STSC_Update.exe) が見つかりませんでした。", "OK", "");
+                }
             }
         }
     }
